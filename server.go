@@ -10,9 +10,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/microctar/licorice/app/route"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/microctar/licorice/app/route"
 )
 
 var router *echo.Echo
@@ -33,13 +33,13 @@ func init() {
 func RunServer() {
 
 	go func() {
-    if err := router.Start(fmt.Sprintf(":%d",port)); err != nil && err != http.ErrServerClosed {
-      router.Logger.Fatal("Shutting down the server")
+		if err := router.Start(fmt.Sprintf(":%d", port)); err != nil && err != http.ErrServerClosed {
+			router.Logger.Fatal("Shutting down the server")
 		}
 	}()
 
 	// graceful shutdown
-	safetybolt := make(chan os.Signal)
+	safetybolt := make(chan os.Signal, 1)
 
 	signal.Notify(safetybolt, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
 

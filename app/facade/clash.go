@@ -46,7 +46,9 @@ func (clash_config *ClashConfig) Collect(enc_subcribtion string, basedir string,
 	clash_config.GetDefaultConfig()
 
 	data := parser.Parser{}
-	data.Parse(enc_subcribtion)
+	if err := data.Parse(enc_subcribtion); err != nil {
+		return err
+	}
 
 	clash_config.Merge("proxies", data.Proxies)
 

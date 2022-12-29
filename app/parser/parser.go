@@ -20,7 +20,7 @@ func (target *Parser) Parse(enc_subscription string) error {
 	metadata, b64err := base64.StdEncoding.DecodeString(enc_subscription)
 
 	if b64err != nil {
-		log.Fatal(b64err)
+		return b64err
 	}
 
 	//  metadata => []byte with character '\n' as line ending

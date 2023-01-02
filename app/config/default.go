@@ -9,7 +9,7 @@ var (
 	DefaultConfigDirectory []string
 	SystemwideDirectory    string = "/usr/local/etc/licorice"
 	DefaultClashConfigPath string = "rules/ACL4SSR/Clash/config"
-	DefaultClashRule       string = "rules/ACL4SSR/Clash/config/ACL4SSR.ini"
+	DefaultClashRule       string = "ACL4SSR.ini"
 )
 
 func init() {
@@ -23,7 +23,7 @@ func init() {
 		}
 
 		if os_err_hd == nil {
-			DefaultConfigDirectory = append(DefaultConfigDirectory, user_homedir+".licorice")
+			DefaultConfigDirectory = append(DefaultConfigDirectory, user_homedir+"/.licorice")
 		}
 
 	}

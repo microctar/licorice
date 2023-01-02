@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/labstack/echo/v4"
 	"github.com/microctar/licorice/app/config"
 	"github.com/microctar/licorice/app/facade"
 	"github.com/microctar/licorice/app/utils"
-	"github.com/labstack/echo/v4"
 )
 
 // config :[]byte => yaml
@@ -28,7 +28,7 @@ func ExportClashConfig(ctx echo.Context) error {
 	if rulefilename != "" {
 		rfpath = fmt.Sprintf("%s/%s", config.DefaultClashConfigPath, rulefilename)
 	} else {
-		rfpath = config.DefaultClashRule
+		rfpath = fmt.Sprintf("%s/%s", config.DefaultClashConfigPath, config.DefaultClashRule)
 	}
 
 	enc_subscribtion, online_err := utils.GetOnlineContent(string(subscribtion_link))
@@ -39,11 +39,11 @@ func ExportClashConfig(ctx echo.Context) error {
 
 	clash := facade.ClashConfig{}
 
-  collect_err := clash.Collect(enc_subscribtion, config.GetDefaultConfigDirectory(), rfpath)
+	collect_err := clash.Collect(enc_subscribtion, config.GetDefaultConfigDirectory(), rfpath)
 
-  if collect_err != nil {
-    return collect_err
-  }
+	if collect_err != nil {
+		return collect_err
+	}
 
 	data, epterr := clash.Export()
 

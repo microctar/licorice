@@ -5,6 +5,9 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
+
+	"golang.org/x/sync/errgroup"
 )
 
 type Diverter struct {
@@ -22,9 +25,9 @@ func (d *Diverter) ReadFile(basedir, path string) error {
 
 	content, read_err := ReadAll(absolute_path)
 
-  if read_err != nil {
-    return read_err
-  }
+	if read_err != nil {
+		return read_err
+	}
 
 	// regexp
 	r_ruleset := regexp.MustCompile("ruleset=(.*)")
@@ -50,52 +53,72 @@ func (d *Diverter) ReadFile(basedir, path string) error {
 	if ruleset != nil {
 		// initialize
 		d.Ruleset = make(map[string][]string)
+		errgrp := new(errgroup.Group)
+		MapMutex := sync.RWMutex{}
+
 		// rule :[]string => ["matched_string", "rulename,location of rule file"]
 		// rule :[]string => ["matched_string", "rulename,[]groupname"]
 		for _, rule := range ruleset {
 
-			// kvpair :[]string => ["rulename", "location of rule file"]
-			kvpair := strings.Split(rule[1], ",")
+			rule := rule
 
-			if strings.Contains(rule[1], "[]") {
+			errgrp.Go(func() error {
 
-				if r_final.MatchString(rule[1]) {
-					rule[1] = strings.Replace(rule[1], "FINAL", "MATCH", -1)
-				}
+				// kvpair :[]string => ["rulename", "location of rule file"]
+				kvpair := strings.Split(rule[1], ",")
 
-				kvpair = strings.Split(strings.Replace(rule[1], "[]", "", -1), ",")
-				strategy := strings.Join(kvpair[1:], ",")
-				d.Ruleset[kvpair[0]] = append(d.Ruleset[kvpair[0]], fmt.Sprintf("%s,%s", strategy, kvpair[0]))
+				if strings.Contains(rule[1], "[]") {
 
-			} else {
+					if r_final.MatchString(rule[1]) {
+						rule[1] = strings.Replace(rule[1], "FINAL", "MATCH", -1)
+					}
 
-				var rule_content string
-        var get_rule_error error
+					kvpair = strings.Split(strings.Replace(rule[1], "[]", "", -1), ",")
+					strategy := strings.Join(kvpair[1:], ",")
 
-				if d.Offline {
-					// rule_file_path => absolute path of offline configuration file
-					rule_file_path := fmt.Sprintf("%s/%s", basedir, kvpair[1])
-					rule_content, get_rule_error = ReadAll(rule_file_path)
+					MapMutex.Lock()
+					d.Ruleset[kvpair[0]] = append(d.Ruleset[kvpair[0]], fmt.Sprintf("%s,%s", strategy, kvpair[0]))
+					MapMutex.Unlock()
 
 				} else {
-					rule_content, get_rule_error = GetOnlineContent(kvpair[1])
+
+					var rule_content string
+					var get_rule_error error
+
+					if d.Offline {
+						// rule_file_path => absolute path of offline configuration file
+						rule_file_path := fmt.Sprintf("%s/%s", basedir, kvpair[1])
+						rule_content, get_rule_error = ReadAll(rule_file_path)
+
+					} else {
+						rule_content, get_rule_error = GetOnlineContent(kvpair[1])
+					}
+
+					if get_rule_error != nil {
+						return get_rule_error
+					}
+
+					// remove unsupported rule
+					rule_content = r_unsupported_rule.ReplaceAllString(rule_content, "\n")
+					// "$0" => matched string
+					rule_content = r_common_rule.ReplaceAllString(rule_content, fmt.Sprintf("$0,%s", kvpair[0]))
+					// "$1" => matched substring
+					rule_content = r_noresolve.ReplaceAllString(rule_content, fmt.Sprintf("$1,%s,no-resolve", kvpair[0]))
+
+					all_rule := r_allrule.FindAllString(rule_content, 8192)
+
+					MapMutex.Lock()
+					d.Ruleset[kvpair[0]] = append(d.Ruleset[kvpair[0]], all_rule...)
+					MapMutex.Unlock()
 				}
 
-        if get_rule_error != nil {
-          return get_rule_error
-        }
+				return nil
 
-				// remove unsupported rule
-				rule_content = r_unsupported_rule.ReplaceAllString(rule_content, "\n")
-				// "$0" => matched string
-				rule_content = r_common_rule.ReplaceAllString(rule_content, fmt.Sprintf("$0,%s", kvpair[0]))
-				// "$1" => matched substring
-				rule_content = r_noresolve.ReplaceAllString(rule_content, fmt.Sprintf("$1,%s,no-resolve", kvpair[0]))
+			})
+		}
 
-				all_rule := r_allrule.FindAllString(rule_content, 8192)
-
-				d.Ruleset[kvpair[0]] = append(d.Ruleset[kvpair[0]], all_rule...)
-			}
+		if gerr := errgrp.Wait(); gerr != nil {
+			return gerr
 		}
 	}
 

@@ -123,31 +123,44 @@ func (d *Diverter) ReadFile(basedir, path string) error {
 	}
 
 	if cpg != nil {
+		wg := new(sync.WaitGroup)
+		MapMutex := sync.RWMutex{}
+
 		for _, group := range cpg {
-			// initialize
-			cpgrp := make(map[string]any)
-			// grpinfo :[]string => ["group_name", "type", "group", ...]
-			// grpinfo :[]string => ["group_name", "type", ".*", "url", "interval_time,,interval_time"]
-			grpinfo := strings.Split(strings.Replace(group[1], "[]", "", -1), "`")
-			cpgrp["name"] = grpinfo[0]
-			cpgrp["type"] = grpinfo[1]
+			wg.Add(1)
+			group := group
 
-			// grpinfo[1] => type :string
-			if grpinfo[1] != "url-test" {
-				cpgrp["proxies"] = append([]string{}, grpinfo[2:]...)
-			} else {
-				// grpinfo[3] => "url"
-				cpgrp["url"] = grpinfo[3]
-				// grpinfo[4] => "interval,,xx"
-				interval_str := strings.Split(grpinfo[4], ",")[0]
-				interval, _ := strconv.Atoi(interval_str)
-				cpgrp["interval"] = interval
-				// grpinfo[2] => ".*"
-				cpgrp["proxies"] = append([]string{}, grpinfo[2])
-			}
+			go func() {
+				defer wg.Done()
+				// initialize
+				cpgrp := make(map[string]any)
+				// grpinfo :[]string => ["group_name", "type", "group", ...]
+				// grpinfo :[]string => ["group_name", "type", ".*", "url", "interval_time,,interval_time"]
+				grpinfo := strings.Split(strings.Replace(group[1], "[]", "", -1), "`")
+				cpgrp["name"] = grpinfo[0]
+				cpgrp["type"] = grpinfo[1]
 
-			d.CustomProxyGroup = append(d.CustomProxyGroup, cpgrp)
+				// grpinfo[1] => type :string
+				if grpinfo[1] != "url-test" {
+					cpgrp["proxies"] = append([]string{}, grpinfo[2:]...)
+				} else {
+					// grpinfo[3] => "url"
+					cpgrp["url"] = grpinfo[3]
+					// grpinfo[4] => "interval,,xx"
+					interval_str := strings.Split(grpinfo[4], ",")[0]
+					interval, _ := strconv.Atoi(interval_str)
+					cpgrp["interval"] = interval
+					// grpinfo[2] => ".*"
+					cpgrp["proxies"] = append([]string{}, grpinfo[2])
+				}
+
+				MapMutex.Lock()
+				defer MapMutex.Unlock()
+				d.CustomProxyGroup = append(d.CustomProxyGroup, cpgrp)
+			}()
 		}
+
+		wg.Wait()
 	}
 
 	if erp != nil {

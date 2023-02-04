@@ -6,6 +6,8 @@ import (
 	"runtime"
 
 	"github.com/microctar/licorice/app/constant"
+
+	_ "net/http/pprof"
 )
 
 var (

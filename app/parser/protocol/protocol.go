@@ -1,4 +1,4 @@
-package config
+package protocol
 
 type ProxyType uint16
 
@@ -8,14 +8,14 @@ const (
 )
 
 func (proxy_type ProxyType) String() string {
-  switch proxy_type {
-  case Shadowsocks:
-    return "ss"
-  default:
-    return "unknown"
-  }
+	switch proxy_type {
+	case Shadowsocks:
+		return "ss"
+	default:
+		return "unknown"
+	}
 }
 
 func (target ProxyType) MarshalYAML() (any, error) {
-  return target.String(), nil
+	return target.String(), nil
 }

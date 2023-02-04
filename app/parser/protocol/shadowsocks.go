@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/microctar/licorice/app/config"
 	"github.com/microctar/licorice/app/utils"
 )
 
@@ -21,7 +20,7 @@ type ProxyShadowsocks struct {
 	Name       string                 `yaml:"name"`
 	Server     string                 `yaml:"server"`
 	Port       uint16                 `yaml:"port"`
-	Type       config.ProxyType       `yaml:"type"`
+	Type       ProxyType              `yaml:"type"`
 	Method     string                 `yaml:"cipher"`
 	Password   string                 `yaml:"password"`
 	Plugin     string                 `yaml:"plugin,omitempty"`
@@ -38,7 +37,7 @@ func (proxy *ProxyShadowsocks) Parse(uri_scheme string) error {
 
 	proxy.Name = strings.TrimSpace(ss_url.Fragment)
 	proxy.Server = ss_url.Hostname()
-	proxy.Type = config.Shadowsocks
+	proxy.Type = Shadowsocks
 	proxy.UDP = true
 
 	// extract and verify port

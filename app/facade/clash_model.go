@@ -1,6 +1,8 @@
 package facade
 
-import "github.com/microctar/licorice/app/config"
+import (
+	"github.com/microctar/licorice/app/parser"
+)
 
 type DNSMode int
 
@@ -80,7 +82,7 @@ type RawConfig struct {
 	DNS           RawDNS                    `yaml:"dns,omitempty"`
 	Experimental  Experimental              `yaml:"experimental,omitempty"`
 	Profile       Profile                   `yaml:"profile,omitempty"`
-	Proxy         []config.Proxy            `yaml:"proxies,omitempty"`
+	Proxy         []parser.Proxy            `yaml:"proxies,omitempty"`
 	ProxyGroup    []map[string]any          `yaml:"proxy-groups,omitempty"`
 	Rule          []string                  `yaml:"rules,omitempty"`
 }

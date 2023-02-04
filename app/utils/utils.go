@@ -43,7 +43,6 @@ func GetByParam(pattern, text string) string {
 func Str2Bool(boolean_val string) bool {
 	if boolean_val == "true" {
 		return true
-	} else {
-		return false
 	}
+	return false
 }

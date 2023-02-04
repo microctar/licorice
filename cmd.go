@@ -12,7 +12,7 @@ import (
 
 func RunCMD() {
 
-	var generator config.Generator
+	var generator facade.Generator
 
 	if confdir == "" {
 		confdir = config.GetDefaultConfigDirectory()
@@ -28,11 +28,11 @@ func RunCMD() {
 	case "clash":
 		generator = &facade.ClashConfig{}
 
-    if rule == "" {
-      rule = config.DefaultClashRule
-    }else{
-      rule = fmt.Sprintf("%s/%s", config.DefaultClashConfigPath, rule)
-    }
+		if rule == "" {
+			rule = config.DefaultClashRule
+		} else {
+			rule = fmt.Sprintf("%s/%s", config.DefaultClashConfigPath, rule)
+		}
 
 	default:
 		log.Fatal(errors.New("Unknown target"))

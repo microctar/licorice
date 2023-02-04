@@ -5,13 +5,14 @@ import (
 	"log"
 	"strings"
 
-	"github.com/microctar/licorice/app/config"
 	"github.com/microctar/licorice/app/parser/protocol"
 	"github.com/microctar/licorice/app/utils"
 )
 
+var _ Proxy = (*Parser)(nil)
+
 type Parser struct {
-	Proxies []config.Proxy
+	Proxies []Proxy
 	Groups  []string
 }
 
@@ -30,7 +31,7 @@ func (target *Parser) Parse(enc_subscription string) error {
 	for _, fragment := range subscription {
 		proto := utils.Get("(.*?):\\/\\/", fragment)
 
-		var proxy config.Proxy
+		var proxy Proxy
 
 		switch proto {
 
@@ -44,11 +45,10 @@ func (target *Parser) Parse(enc_subscription string) error {
 
 		if err := proxy.Parse(fragment); err != nil {
 			log.Fatal(err)
-		} else {
-			target.Proxies = append(target.Proxies, proxy)
-			target.Groups = append(target.Groups, proxy.GetName())
 		}
 
+		target.Proxies = append(target.Proxies, proxy)
+		target.Groups = append(target.Groups, proxy.GetName())
 	}
 
 	return nil

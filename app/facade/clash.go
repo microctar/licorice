@@ -4,15 +4,18 @@ import (
 	"errors"
 	"os"
 
-	"github.com/microctar/licorice/app/config"
 	"github.com/microctar/licorice/app/parser"
-	"github.com/microctar/licorice/app/utils"
+	"github.com/microctar/licorice/app/utils/acl"
+	"github.com/patrickmn/go-cache"
 	"gopkg.in/yaml.v3"
 )
+
+var _ Generator = (*ClashConfig)(nil)
 
 // Generate Default Clash Configuration
 type ClashConfig struct {
 	RawConfig RawConfig
+	aclr      acl.ACLReader
 }
 
 func (clash_config *ClashConfig) GetDefaultConfig() any {
@@ -33,7 +36,7 @@ func (clash_config *ClashConfig) Merge(name string, data any) {
 
 	switch name {
 	case "proxies":
-		clash_config.RawConfig.Proxy = data.([]config.Proxy)
+		clash_config.RawConfig.Proxy = data.([]parser.Proxy)
 	case "proxy-groups":
 		clash_config.RawConfig.ProxyGroup = data.([]map[string]any)
 	case "rules":
@@ -45,7 +48,7 @@ func (clash_config *ClashConfig) Collect(enc_subcribtion string, basedir string,
 
 	clash_config.GetDefaultConfig()
 
-	data := parser.Parser{}
+	data := parser.NewParser()
 	if err := data.Parse(enc_subcribtion); err != nil {
 		return err
 	}
@@ -54,12 +57,13 @@ func (clash_config *ClashConfig) Collect(enc_subcribtion string, basedir string,
 
 	if _, status := os.Stat(basedir); status == nil {
 
-		diverter := utils.Diverter{}
-		read_err := diverter.ReadFile(basedir, rule_filename)
+		read_err := clash_config.aclr.ReadFile(basedir, rule_filename)
 
 		if read_err != nil {
 			return read_err
 		}
+
+		diverter := clash_config.aclr.Expose().(*acl.ClashDiverter)
 
 		// append ruleset to RawConfig
 		for _, ruleset := range diverter.Ruleset {
@@ -87,7 +91,7 @@ func (clash_config *ClashConfig) Collect(enc_subcribtion string, basedir string,
 
 // Export Clash Config
 
-func (clash_config ClashConfig) Export() ([]byte, error) {
+func (clash_config *ClashConfig) Export() ([]byte, error) {
 
 	out, err := yaml.Marshal(clash_config.RawConfig)
 
@@ -97,4 +101,8 @@ func (clash_config ClashConfig) Export() ([]byte, error) {
 
 	return out, nil
 
+}
+
+func (clash_config *ClashConfig) Setup(client string, cache *cache.Cache) {
+	clash_config.aclr = acl.NewCachedACLR(client, cache)
 }

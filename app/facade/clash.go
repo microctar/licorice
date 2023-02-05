@@ -103,6 +103,12 @@ func (clash_config *ClashConfig) Export() ([]byte, error) {
 
 }
 
-func (clash_config *ClashConfig) Setup(client string, cache *cache.Cache) {
-	clash_config.aclr = acl.NewCachedACLR(client, cache)
+func (clash_config *ClashConfig) Setup(client string, cachestore *cache.Cache) {
+
+	if cachestore == (*cache.Cache)(nil) {
+		clash_config.aclr = acl.NewACLR(client)
+		return
+	}
+
+	clash_config.aclr = acl.NewCachedACLR(client, cachestore)
 }

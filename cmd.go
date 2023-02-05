@@ -26,7 +26,7 @@ func RunCMD() {
 
 	switch target {
 	case "clash":
-		generator = &facade.ClashConfig{}
+		generator = facade.NewGenerator("clash")
 
 		if rule == "" {
 			rule = config.DefaultClashRule

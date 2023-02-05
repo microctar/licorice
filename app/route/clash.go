@@ -39,7 +39,7 @@ func ExportClashConfig(cache *cache.Cache) echo.HandlerFunc {
 			return online_err
 		}
 
-		clash := facade.NewGenerator("clash", cache)
+		clash := facade.NewCachedGenerator("clash", cache)
 
 		collect_err := clash.Collect(enc_subscribtion, config.GetDefaultConfigDirectory(), rfpath)
 

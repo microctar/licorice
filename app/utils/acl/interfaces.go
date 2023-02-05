@@ -19,6 +19,19 @@ type CachedACLR struct {
 	cache *cache.Cache
 }
 
+func NewACLR(client string) ACLReader {
+	var aclr ACLReader
+
+	switch client {
+	case "clash":
+		aclr = &ClashDiverter{
+			Ruleset: make(map[string][]string),
+		}
+	}
+
+	return aclr
+}
+
 func NewCachedACLR(client string, cache *cache.Cache) ACLReader {
 	var aclr ACLReader
 

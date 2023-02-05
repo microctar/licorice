@@ -10,7 +10,7 @@ type Generator interface {
 	Setup(client string, cache *cache.Cache)
 }
 
-func NewGenerator(client string, cache *cache.Cache) Generator {
+func NewCachedGenerator(client string, cache *cache.Cache) Generator {
 	var customGenerator Generator
 
 	switch client {
@@ -21,4 +21,8 @@ func NewGenerator(client string, cache *cache.Cache) Generator {
 	customGenerator.Setup(client, cache)
 
 	return customGenerator
+}
+
+func NewGenerator(client string) Generator {
+	return NewCachedGenerator(client, (*cache.Cache)(nil))
 }

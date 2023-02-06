@@ -24,7 +24,7 @@ func NewACLR(client string) ACLReader {
 
 	switch client {
 	case "clash":
-		aclr = &ClashDiverter{
+		aclr = &clashDiverter{
 			Ruleset: make(map[string][]string),
 		}
 	}
@@ -37,7 +37,7 @@ func NewCachedACLR(client string, cache *cache.Cache) ACLReader {
 
 	switch client {
 	case "clash":
-		aclr = &ClashDiverter{
+		aclr = &clashDiverter{
 			Ruleset: make(map[string][]string),
 		}
 	}
@@ -52,11 +52,7 @@ func (c *CachedACLR) ReadFile(basedir string, rule_filename string) error {
 	rulefile := fmt.Sprintf("%s/%s", basedir, rule_filename)
 
 	if data, found := c.cache.Get(rulefile); found {
-		switch c.aclr.(type) {
-		case *ClashDiverter:
-			c.aclr = data.(*ClashDiverter)
-		}
-
+		c.aclr = data.(ACLReader)
 		return nil
 	}
 

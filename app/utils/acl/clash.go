@@ -11,9 +11,9 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-var _ ACLReader = (*ClashDiverter)(nil)
+var _ ACLReader = (*clashDiverter)(nil)
 
-type ClashDiverter struct {
+type clashDiverter struct {
 	Offline                bool
 	Ruleset                map[string][]string
 	CustomProxyGroup       []map[string]any
@@ -21,7 +21,7 @@ type ClashDiverter struct {
 	EnableRuleGenerator    bool
 }
 
-func (d *ClashDiverter) ReadFile(basedir, path string) error {
+func (d *clashDiverter) ReadFile(basedir, path string) error {
 	// absolute_path :string => filter configuration file
 	// join path
 	absolute_path := fmt.Sprintf("%s/%s", basedir, path)
@@ -179,6 +179,6 @@ func (d *ClashDiverter) ReadFile(basedir, path string) error {
 	return nil
 }
 
-func (d *ClashDiverter) Expose() any {
-	return d
+func (d *clashDiverter) Expose() any {
+	return (*ClashDiverter)(d)
 }

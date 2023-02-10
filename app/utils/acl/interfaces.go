@@ -33,17 +33,8 @@ func NewACLR(client string) ACLReader {
 }
 
 func NewCachedACLR(client string, cache *cache.Cache) ACLReader {
-	var aclr ACLReader
-
-	switch client {
-	case "clash":
-		aclr = &clashDiverter{
-			Ruleset: make(map[string][]string),
-		}
-	}
-
 	return &CachedACLR{
-		aclr:  aclr,
+		aclr:  NewACLR(client),
 		cache: cache,
 	}
 }
@@ -56,13 +47,13 @@ func (c *CachedACLR) ReadFile(basedir string, rule_filename string) error {
 		return nil
 	}
 
-	err := c.aclr.ReadFile(basedir, rule_filename)
-
-	if err == nil {
-		c.cache.Set(rulefile, c.aclr, cache.DefaultExpiration)
+	if err := c.aclr.ReadFile(basedir, rule_filename); err != nil {
+		return err
 	}
 
-	return err
+	c.cache.Set(rulefile, c.aclr, cache.DefaultExpiration)
+
+	return nil
 }
 
 func (c *CachedACLR) Expose() any {

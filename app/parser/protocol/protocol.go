@@ -1,14 +1,18 @@
 package protocol
 
+// types of protocol used in Virtual Private Network
 type ProxyType uint16
 
 const (
+	// unknown protocol
 	Unknown ProxyType = iota
+
+	// a fast tunnel proxy [Shadowsocks](https://shadowsocks.org)
 	Shadowsocks
 )
 
-func (proxy_type ProxyType) String() string {
-	switch proxy_type {
+func (target ProxyType) String() string {
+	switch target {
 	case Shadowsocks:
 		return "ss"
 	default:

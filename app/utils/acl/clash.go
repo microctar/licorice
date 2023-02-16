@@ -22,34 +22,34 @@ type clashDiverter struct {
 }
 
 func (d *clashDiverter) ReadFile(basedir, path string) error {
-	// absolute_path :string => filter configuration file
+	// absPath :string => filter configuration file
 	// join path
-	absolute_path := fmt.Sprintf("%s/%s", basedir, path)
+	absPath := fmt.Sprintf("%s/%s", basedir, path)
 
-	content, read_err := utils.ReadAll(absolute_path)
+	content, readErr := utils.ReadAll(absPath)
 
-	if read_err != nil {
-		return read_err
+	if readErr != nil {
+		return readErr
 	}
 
 	// regexp
-	r_ruleset := regexp.MustCompile("ruleset=(.*)")
-	r_cpg := regexp.MustCompile("custom_proxy_group=(.*)")
-	r_erg := regexp.MustCompile("enable_rule_generator=(.*)")
-	r_oor := regexp.MustCompile("overwrite_original_rules=(.*)")
-	r_common_rule := regexp.MustCompile("(?m:^(DOMAIN|DOMAIN-(KEYWORD|SUFFIX)|PROCESS-NAME)(.*?)$)")
-	r_unsupported_rule := regexp.MustCompile("(?m:^(USER-AGENT|URL-REGEX)(.*?)$)")
-	r_noresolve := regexp.MustCompile("(?im:^(.*?),no-resolve$)")
-	r_allrule := regexp.MustCompile("(?im:^[^\\#\\n].*$)")
-	r_online := regexp.MustCompile("(?i:online)")
-	r_final := regexp.MustCompile("(?i:final)")
+	rRuleset := regexp.MustCompile("ruleset=(.*)")
+	rCpg := regexp.MustCompile("custom_proxy_group=(.*)")
+	rErg := regexp.MustCompile("enable_rule_generator=(.*)")
+	rOor := regexp.MustCompile("overwrite_original_rules=(.*)")
+	rCommonRule := regexp.MustCompile("(?m:^(DOMAIN|DOMAIN-(KEYWORD|SUFFIX)|PROCESS-NAME)(.*?)$)")
+	rUnsupportedRule := regexp.MustCompile("(?m:^(USER-AGENT|URL-REGEX)(.*?)$)")
+	rNoresolve := regexp.MustCompile("(?im:^(.*?),no-resolve$)")
+	rAllrule := regexp.MustCompile("(?im:^[^\\#\\n].*$)")
+	rOnline := regexp.MustCompile("(?i:online)")
+	rFinal := regexp.MustCompile("(?i:final)")
 
-	ruleset := r_ruleset.FindAllStringSubmatch(string(content), 64)
-	cpg := r_cpg.FindAllStringSubmatch(string(content), 64)
-	erp := r_erg.FindStringSubmatch(string(content))
-	oor := r_oor.FindStringSubmatch(string(content))
+	ruleset := rRuleset.FindAllStringSubmatch(string(content), 64)
+	cpg := rCpg.FindAllStringSubmatch(string(content), 64)
+	erp := rErg.FindStringSubmatch(string(content))
+	oor := rOor.FindStringSubmatch(string(content))
 
-	if !r_online.MatchString(absolute_path) {
+	if !rOnline.MatchString(absPath) {
 		d.Offline = true
 	}
 
@@ -72,7 +72,7 @@ func (d *clashDiverter) ReadFile(basedir, path string) error {
 
 				if strings.Contains(rule[1], "[]") {
 
-					if r_final.MatchString(rule[1]) {
+					if rFinal.MatchString(rule[1]) {
 						rule[1] = strings.Replace(rule[1], "FINAL", "MATCH", -1)
 					}
 
@@ -85,33 +85,33 @@ func (d *clashDiverter) ReadFile(basedir, path string) error {
 
 				} else {
 
-					var rule_content string
-					var get_rule_error error
+					var ruleContent string
+					var readRuleErr error
 
 					if d.Offline {
-						// rule_file_path => absolute path of offline configuration file
-						rule_file_path := fmt.Sprintf("%s/%s", basedir, kvpair[1])
-						rule_content, get_rule_error = utils.ReadAll(rule_file_path)
+						// ruleFilePath => absolute path of offline configuration file
+						ruleFilePath := fmt.Sprintf("%s/%s", basedir, kvpair[1])
+						ruleContent, readRuleErr = utils.ReadAll(ruleFilePath)
 
 					} else {
-						rule_content, get_rule_error = utils.GetOnlineContent(kvpair[1])
+						ruleContent, readRuleErr = utils.GetOnlineContent(kvpair[1])
 					}
 
-					if get_rule_error != nil {
-						return get_rule_error
+					if readRuleErr != nil {
+						return readRuleErr
 					}
 
 					// remove unsupported rule
-					rule_content = r_unsupported_rule.ReplaceAllString(rule_content, "\n")
+					ruleContent = rUnsupportedRule.ReplaceAllString(ruleContent, "\n")
 					// "$0" => matched string
-					rule_content = r_common_rule.ReplaceAllString(rule_content, fmt.Sprintf("$0,%s", kvpair[0]))
+					ruleContent = rCommonRule.ReplaceAllString(ruleContent, fmt.Sprintf("$0,%s", kvpair[0]))
 					// "$1" => matched substring
-					rule_content = r_noresolve.ReplaceAllString(rule_content, fmt.Sprintf("$1,%s,no-resolve", kvpair[0]))
+					ruleContent = rNoresolve.ReplaceAllString(ruleContent, fmt.Sprintf("$1,%s,no-resolve", kvpair[0]))
 
-					all_rule := r_allrule.FindAllString(rule_content, 8192)
+					allRule := rAllrule.FindAllString(ruleContent, 8192)
 
 					MapMutex.Lock()
-					d.Ruleset[kvpair[0]] = append(d.Ruleset[kvpair[0]], all_rule...)
+					d.Ruleset[kvpair[0]] = append(d.Ruleset[kvpair[0]], allRule...)
 					MapMutex.Unlock()
 				}
 
@@ -150,8 +150,8 @@ func (d *clashDiverter) ReadFile(basedir, path string) error {
 					// grpinfo[3] => "url"
 					cpgrp["url"] = grpinfo[3]
 					// grpinfo[4] => "interval,,xx"
-					interval_str := strings.Split(grpinfo[4], ",")[0]
-					interval, _ := strconv.Atoi(interval_str)
+					intervalStr := strings.Split(grpinfo[4], ",")[0]
+					interval, _ := strconv.Atoi(intervalStr)
 					cpgrp["interval"] = interval
 					// grpinfo[2] => ".*"
 					cpgrp["proxies"] = append([]string{}, grpinfo[2])

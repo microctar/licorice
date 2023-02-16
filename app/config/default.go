@@ -15,15 +15,12 @@ var (
 func init() {
 	if runtime.GOOS == "freebsd" || runtime.GOOS == "linux" {
 
-		user_configdir, os_err_cd := os.UserConfigDir()
-		user_homedir, os_err_hd := os.UserHomeDir()
-
-		if os_err_cd == nil {
-			DefaultConfigDirectory = append(DefaultConfigDirectory, user_configdir+"/licorice")
+		if userConfdir, cdErr := os.UserConfigDir(); cdErr == nil {
+			DefaultConfigDirectory = append(DefaultConfigDirectory, userConfdir+"/licorice")
 		}
 
-		if os_err_hd == nil {
-			DefaultConfigDirectory = append(DefaultConfigDirectory, user_homedir+"/.licorice")
+		if userHomedir, hdErr := os.UserHomeDir(); hdErr == nil {
+			DefaultConfigDirectory = append(DefaultConfigDirectory, userHomedir+"/.licorice")
 		}
 
 	}

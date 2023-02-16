@@ -4,7 +4,7 @@ import "github.com/patrickmn/go-cache"
 
 type Generator interface {
 	// function to gather intel
-	Collect(enc_subscribtion string, basedir string, rule_filename string) error
+	Collect(encSubscription string, basedir string, ruleFilename string) error
 
 	// export data to bytes
 	Export() (data []byte, err error)

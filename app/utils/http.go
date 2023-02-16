@@ -20,10 +20,10 @@ func GetOnlineContent(url string) (string, error) {
 		return "", errors.New(fmt.Sprintf("http status: %d", reponse.StatusCode))
 	}
 
-	body, rep_err := io.ReadAll(reponse.Body)
+	body, repErr := io.ReadAll(reponse.Body)
 
-	if rep_err != nil {
-		return "", rep_err
+	if repErr != nil {
+		return "", repErr
 	}
 
 	return string(body), nil

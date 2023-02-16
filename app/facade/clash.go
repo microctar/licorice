@@ -18,7 +18,7 @@ type ClashConfig struct {
 	aclr      acl.ACLReader
 }
 
-func (cc *ClashConfig) getDefaultConfig() any {
+func (cc *ClashConfig) getDefaultConfig() {
 
 	cc.RawConfig = RawConfig{
 		Port:               7890,
@@ -29,15 +29,14 @@ func (cc *ClashConfig) getDefaultConfig() any {
 		ExternalController: ":9090",
 	}
 
-	return cc.RawConfig
 }
 
-func (cc *ClashConfig) Collect(enc_subcribtion string, basedir string, rule_filename string) error {
+func (cc *ClashConfig) Collect(encSubscription string, basedir string, ruleFilename string) error {
 
 	cc.getDefaultConfig()
 
 	data := parser.NewParser()
-	if err := data.Parse(enc_subcribtion); err != nil {
+	if err := data.Parse(encSubscription); err != nil {
 		return err
 	}
 
@@ -45,8 +44,8 @@ func (cc *ClashConfig) Collect(enc_subcribtion string, basedir string, rule_file
 
 	if _, status := os.Stat(basedir); status == nil {
 
-		if read_err := cc.aclr.ReadFile(basedir, rule_filename); read_err != nil {
-			return read_err
+		if readErr := cc.aclr.ReadFile(basedir, ruleFilename); readErr != nil {
+			return readErr
 		}
 
 		diverter := cc.aclr.Expose().(*acl.ClashDiverter)
@@ -57,12 +56,12 @@ func (cc *ClashConfig) Collect(enc_subcribtion string, basedir string, rule_file
 		}
 
 		// replace ".*" with real group name
-		for _, proxies_group := range diverter.CustomProxyGroup {
-			tmpdata := proxies_group["proxies"].([]string)
+		for _, proxyGrp := range diverter.CustomProxyGroup {
+			tmpdata := proxyGrp["proxies"].([]string)
 			if tail := len(tmpdata) - 1; tmpdata[tail] == ".*" {
 				tmpdata = tmpdata[:tail]
 				tmpdata = append(tmpdata, data.Groups...)
-				proxies_group["proxies"] = tmpdata
+				proxyGrp["proxies"] = tmpdata
 			}
 		}
 

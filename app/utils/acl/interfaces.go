@@ -9,8 +9,8 @@ import (
 var _ ACLReader = (*CachedACLR)(nil)
 
 type ACLReader interface {
-	// e.g. basedir => /usr/local/etc, rule_filename => rules/ACL4SSR/Clash/config/example.ini
-	ReadFile(basedir string, rule_filename string) error
+	// e.g. basedir => /usr/local/etc, ruleFilename => rules/ACL4SSR/Clash/config/example.ini
+	ReadFile(basedir string, ruleFilename string) error
 	Expose() any
 }
 
@@ -39,15 +39,15 @@ func NewCachedACLR(client string, cache *cache.Cache) ACLReader {
 	}
 }
 
-func (c *CachedACLR) ReadFile(basedir string, rule_filename string) error {
-	rulefile := fmt.Sprintf("%s/%s", basedir, rule_filename)
+func (c *CachedACLR) ReadFile(basedir string, ruleFilename string) error {
+	rulefile := fmt.Sprintf("%s/%s", basedir, ruleFilename)
 
 	if data, found := c.cache.Get(rulefile); found {
 		c.aclr = data.(ACLReader)
 		return nil
 	}
 
-	if err := c.aclr.ReadFile(basedir, rule_filename); err != nil {
+	if err := c.aclr.ReadFile(basedir, ruleFilename); err != nil {
 		return err
 	}
 

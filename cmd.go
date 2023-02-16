@@ -10,7 +10,7 @@ import (
 	"github.com/microctar/licorice/app/utils"
 )
 
-func RunCMD() {
+func runCMD() {
 
 	var generator facade.Generator
 
@@ -18,10 +18,10 @@ func RunCMD() {
 		confdir = config.GetDefaultConfigDirectory()
 	}
 
-	enc_subcribtion, read_err := utils.ReadAll(inputfile)
+	encSubscription, readErr := utils.ReadAll(inputfile)
 
-	if read_err != nil {
-		log.Fatal(read_err)
+	if readErr != nil {
+		log.Fatal(readErr)
 	}
 
 	switch target {
@@ -38,10 +38,8 @@ func RunCMD() {
 		log.Fatal(errors.New("Unknown target"))
 	}
 
-	collect_err := generator.Collect(enc_subcribtion, confdir, rule)
-
-	if collect_err != nil {
-		log.Fatal(collect_err)
+	if collectErr := generator.Collect(encSubscription, confdir, rule); collectErr != nil {
+		log.Fatal(collectErr)
 	}
 
 	data, err := generator.Export()

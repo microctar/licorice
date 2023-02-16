@@ -23,7 +23,7 @@ var (
 )
 
 const (
-	usage = "USAGE\n\t%s [flags]\n"
+	usageStr = "USAGE\n\t%s [flags]\n"
 )
 
 func init() {
@@ -37,13 +37,13 @@ func init() {
 	flag.StringVar(&rule, "rule", "ACL4SSR.ini", "specify rule file")
 	flag.StringVar(&target, "target", "clash", "specify target")
 	flag.BoolVar(&version, "version", false, "print licorice version")
-	flag.Usage = Usage
+	flag.Usage = usage
 	flag.Parse()
 
 }
 
-func Usage() {
-	fmt.Fprintf(flag.CommandLine.Output(), usage, "licorice")
+func usage() {
+	fmt.Fprintf(flag.CommandLine.Output(), usageStr, "licorice")
 	flag.PrintDefaults()
 }
 
@@ -62,13 +62,13 @@ func main() {
 
 	// run as commmand line tool
 	if inputfile != "" {
-		RunCMD()
+		runCMD()
 		return
 	}
 
 	// run as server
 	if server {
-		RunServer()
+		runServer()
 		return
 	}
 

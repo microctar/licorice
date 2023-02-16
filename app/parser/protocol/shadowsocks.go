@@ -28,25 +28,27 @@ type ProxyShadowsocks struct {
 	UDP        bool                   `yaml:"udp"`
 }
 
-func (proxy *ProxyShadowsocks) Parse(uri_scheme string) error {
-	ss_url, urlerr := url.Parse(uri_scheme)
+func (proxy *ProxyShadowsocks) Parse(uriScheme string) error {
+	ssURL, urlerr := url.Parse(uriScheme)
 
 	if urlerr != nil {
 		return urlerr
 	}
 
-	proxy.Name = strings.TrimSpace(ss_url.Fragment)
-	proxy.Server = ss_url.Hostname()
+	proxy.Name = strings.TrimSpace(ssURL.Fragment)
+	proxy.Server = ssURL.Hostname()
 	proxy.Type = Shadowsocks
 	proxy.UDP = true
 
 	// extract and verify port
 
-	str_port := ss_url.Port()
+	strPort := ssURL.Port()
 
-	if port, err := strconv.Atoi(str_port); err != nil {
-		return errors.New("parser => cannot parser port of shadowsocks config")
-	} else {
+	{
+		port, convErr := strconv.Atoi(strPort)
+		if convErr != nil {
+			return errors.New("parser => cannot parser port of shadowsocks config")
+		}
 		proxy.Port = uint16(port)
 	}
 
@@ -54,21 +56,23 @@ func (proxy *ProxyShadowsocks) Parse(uri_scheme string) error {
 		return errors.New("parser => port of shadowsocks config is incorrect")
 	}
 
-	// extract userinfo
+	{
+		// extract userinfo
 
-	userinfo := utils.Get("ss:\\/\\/(.*?)@", uri_scheme)
+		userinfo := utils.Get("ss:\\/\\/(.*?)@", uriScheme)
 
-	mp, b64err := base64.RawURLEncoding.DecodeString(userinfo)
+		mp, b64err := base64.RawURLEncoding.DecodeString(userinfo)
 
-	if b64err != nil {
-		return b64err
+		if b64err != nil {
+			return b64err
+		}
+
+		// info => [method (aka cipher), password]
+
+		info := strings.Split(string(mp), ":")
+
+		proxy.Method, proxy.Password = info[0], info[1]
 	}
-
-	// info => [method (aka cipher), password]
-
-	info := strings.Split(string(mp), ":")
-
-	proxy.Method, proxy.Password = info[0], info[1]
 
 	// "TOR_PT_SERVER_TRANSPORT_OPTIONS" -- A semicolon-separated list
 	//  of <key>:<value> pairs, where <key> is a transport name and
@@ -80,14 +84,14 @@ func (proxy *ProxyShadowsocks) Parse(uri_scheme string) error {
 
 	// try to extract plugin options
 
-	plugin := ss_url.Query().Get("plugin")
+	plugin := ssURL.Query().Get("plugin")
 
 	if plugin != "" {
 		proxy.PluginOpts = make(map[string]interface{})
-		plugin_and_opts := strings.Split(plugin, ";")
-		proxy.Plugin = plugin_and_opts[0]
+		pluginAndOpts := strings.Split(plugin, ";")
+		proxy.Plugin = pluginAndOpts[0]
 
-		for _, opts := range plugin_and_opts[1:] {
+		for _, opts := range pluginAndOpts[1:] {
 			kvpair := strings.Split(opts, "=")
 			proxy.PluginOpts[kvpair[0]] = kvpair[1]
 		}
@@ -96,6 +100,7 @@ func (proxy *ProxyShadowsocks) Parse(uri_scheme string) error {
 	return nil
 }
 
+// GetName, the implementation of shadowsocks for Proxy interface
 func (proxy *ProxyShadowsocks) GetName() string {
 	return proxy.Name
 }

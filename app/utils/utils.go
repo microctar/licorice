@@ -40,8 +40,8 @@ func GetByParam(pattern, text string) string {
 
 // convert string to boolean
 
-func Str2Bool(boolean_val string) bool {
-	if boolean_val == "true" {
+func Str2Bool(valBool string) bool {
+	if valBool == "true" {
 		return true
 	}
 	return false

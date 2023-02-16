@@ -16,9 +16,9 @@ type Parser struct {
 	Groups  []string
 }
 
-func (target *Parser) Parse(enc_subscription string) error {
+func (target *Parser) Parse(encSubscription string) error {
 
-	metadata, b64err := base64.StdEncoding.DecodeString(enc_subscription)
+	metadata, b64err := base64.StdEncoding.DecodeString(encSubscription)
 
 	if b64err != nil {
 		return b64err

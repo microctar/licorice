@@ -34,7 +34,7 @@ func init() {
 
 }
 
-func RunServer() {
+func runServer() {
 
 	go func() {
 		if err := router.Start(fmt.Sprintf(":%d", port)); err != nil && err != http.ErrServerClosed {

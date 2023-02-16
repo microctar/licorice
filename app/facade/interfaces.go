@@ -3,10 +3,13 @@ package facade
 import "github.com/patrickmn/go-cache"
 
 type Generator interface {
-	GetDefaultConfig() any
+	// function to gather intel
 	Collect(enc_subscribtion string, basedir string, rule_filename string) error
-	Merge(name string, data any)
+
+	// export data to bytes
 	Export() (data []byte, err error)
+
+	// set up generator with cache
 	Setup(client string, cache *cache.Cache)
 }
 

@@ -18,56 +18,42 @@ type ClashConfig struct {
 	aclr      acl.ACLReader
 }
 
-func (clash_config *ClashConfig) GetDefaultConfig() any {
+func (cc *ClashConfig) getDefaultConfig() any {
 
-	clash_config.RawConfig = RawConfig{
+	cc.RawConfig = RawConfig{
 		Port:               7890,
 		SocksPort:          7891,
-		AllowLan:           false,
+		AllowLan:           true,
 		Mode:               Rule,
 		LogLevel:           INFO,
 		ExternalController: ":9090",
 	}
 
-	return clash_config.RawConfig
+	return cc.RawConfig
 }
 
-func (clash_config *ClashConfig) Merge(name string, data any) {
+func (cc *ClashConfig) Collect(enc_subcribtion string, basedir string, rule_filename string) error {
 
-	switch name {
-	case "proxies":
-		clash_config.RawConfig.Proxy = data.([]parser.Proxy)
-	case "proxy-groups":
-		clash_config.RawConfig.ProxyGroup = data.([]map[string]any)
-	case "rules":
-		clash_config.RawConfig.Rule = append(clash_config.RawConfig.Rule, data.([]string)...)
-	}
-}
-
-func (clash_config *ClashConfig) Collect(enc_subcribtion string, basedir string, rule_filename string) error {
-
-	clash_config.GetDefaultConfig()
+	cc.getDefaultConfig()
 
 	data := parser.NewParser()
 	if err := data.Parse(enc_subcribtion); err != nil {
 		return err
 	}
 
-	clash_config.Merge("proxies", data.Proxies)
+	cc.RawConfig.Proxy = data.Proxies
 
 	if _, status := os.Stat(basedir); status == nil {
 
-		read_err := clash_config.aclr.ReadFile(basedir, rule_filename)
-
-		if read_err != nil {
+		if read_err := cc.aclr.ReadFile(basedir, rule_filename); read_err != nil {
 			return read_err
 		}
 
-		diverter := clash_config.aclr.Expose().(*acl.ClashDiverter)
+		diverter := cc.aclr.Expose().(*acl.ClashDiverter)
 
 		// append ruleset to RawConfig
 		for _, ruleset := range diverter.Ruleset {
-			clash_config.Merge("rules", ruleset)
+			cc.RawConfig.Rule = append(cc.RawConfig.Rule, ruleset...)
 		}
 
 		// replace ".*" with real group name
@@ -81,7 +67,7 @@ func (clash_config *ClashConfig) Collect(enc_subcribtion string, basedir string,
 		}
 
 		// add proxy-groups to RawConfig
-		clash_config.Merge("proxy-groups", diverter.CustomProxyGroup)
+		cc.RawConfig.ProxyGroup = diverter.CustomProxyGroup
 	} else {
 		return errors.New("cannot find acl4ssr config directory")
 	}
@@ -91,9 +77,9 @@ func (clash_config *ClashConfig) Collect(enc_subcribtion string, basedir string,
 
 // Export Clash Config
 
-func (clash_config *ClashConfig) Export() ([]byte, error) {
+func (cc *ClashConfig) Export() ([]byte, error) {
 
-	out, err := yaml.Marshal(clash_config.RawConfig)
+	out, err := yaml.Marshal(cc.RawConfig)
 
 	if err != nil {
 		return nil, err
@@ -103,12 +89,12 @@ func (clash_config *ClashConfig) Export() ([]byte, error) {
 
 }
 
-func (clash_config *ClashConfig) Setup(client string, cachestore *cache.Cache) {
+func (cc *ClashConfig) Setup(client string, cachestore *cache.Cache) {
 
 	if cachestore == (*cache.Cache)(nil) {
-		clash_config.aclr = acl.NewACLR(client)
+		cc.aclr = acl.NewACLR(client)
 		return
 	}
 
-	clash_config.aclr = acl.NewCachedACLR(client, cachestore)
+	cc.aclr = acl.NewCachedACLR(client, cachestore)
 }

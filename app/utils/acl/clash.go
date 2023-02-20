@@ -129,17 +129,22 @@ func (d *clashDiverter) ReadFile(basedir, path string) error {
 		wg := new(sync.WaitGroup)
 		MapMutex := sync.RWMutex{}
 
-		for _, group := range cpg {
+		d.CustomProxyGroup = make([]map[string]any, len(cpg))
+
+		for offset, group := range cpg {
 			wg.Add(1)
 			group := group
+			offset := offset
 
 			go func() {
 				defer wg.Done()
-				// initialize
-				cpgrp := make(map[string]any)
+
 				// grpinfo :[]string => ["group_name", "type", "group", ...]
 				// grpinfo :[]string => ["group_name", "type", ".*", "url", "interval_time,,interval_time"]
 				grpinfo := strings.Split(strings.Replace(group[1], "[]", "", -1), "`")
+
+				// initialize
+				cpgrp := make(map[string]any)
 				cpgrp["name"] = grpinfo[0]
 				cpgrp["type"] = grpinfo[1]
 
@@ -159,7 +164,7 @@ func (d *clashDiverter) ReadFile(basedir, path string) error {
 
 				MapMutex.Lock()
 				defer MapMutex.Unlock()
-				d.CustomProxyGroup = append(d.CustomProxyGroup, cpgrp)
+				d.CustomProxyGroup[offset] = cpgrp
 			}()
 		}
 

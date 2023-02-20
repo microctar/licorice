@@ -5,22 +5,24 @@ import (
 	"runtime"
 )
 
-var (
-	DefaultConfigDirectory []string
-	SystemwideDirectory    string = "/usr/local/etc/licorice"
-	DefaultClashConfigPath string = "rules/ACL4SSR/Clash/config"
-	DefaultClashRule       string = "ACL4SSR.ini"
+var defaultConfigDirectory []string
+
+const (
+	systemwideDirectory = "/usr/local/etc/licorice"
+
+	DefaultClashRulePath = "rules/ACL4SSR/Clash/config"
+	DefaultClashRuleFile = "ACL4SSR.ini"
 )
 
 func init() {
 	if runtime.GOOS == "freebsd" || runtime.GOOS == "linux" {
 
 		if userConfdir, cdErr := os.UserConfigDir(); cdErr == nil {
-			DefaultConfigDirectory = append(DefaultConfigDirectory, userConfdir+"/licorice")
+			defaultConfigDirectory = append(defaultConfigDirectory, userConfdir+"/licorice")
 		}
 
 		if userHomedir, hdErr := os.UserHomeDir(); hdErr == nil {
-			DefaultConfigDirectory = append(DefaultConfigDirectory, userHomedir+"/.licorice")
+			defaultConfigDirectory = append(defaultConfigDirectory, userHomedir+"/.licorice")
 		}
 
 	}
@@ -28,12 +30,12 @@ func init() {
 
 func GetDefaultConfigDirectory() string {
 
-	for _, directory := range DefaultConfigDirectory {
+	for _, directory := range defaultConfigDirectory {
 		_, status := os.Stat(directory)
 		if status == nil {
 			return directory
 		}
 	}
 
-	return SystemwideDirectory
+	return systemwideDirectory
 }

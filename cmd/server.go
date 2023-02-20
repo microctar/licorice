@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"context"
@@ -16,27 +16,21 @@ import (
 	"github.com/patrickmn/go-cache"
 )
 
-var router *echo.Echo
-var store *cache.Cache
+func runServer() {
 
-func init() {
+	store := cache.New(4*time.Minute, 8*time.Minute)
 
-	store = cache.New(4*time.Minute, 8*time.Minute)
-
-	router = echo.New()
+	router := echo.New()
 	router.Logger.Debug()
 	// enable gzip support
 	router.Use(middleware.Gzip())
 	router.Use(middleware.Logger())
 	// restful api
-	router.GET("/clash/:link", route.ExportClashConfig(store))
-	router.GET("/clash/:link/:rulefile", route.ExportClashConfig(store))
-
-}
-
-func runServer() {
+	router.GET("/clash/:link", route.ExportClashConfig(store, confDir, clashRulePath+"/"+clashRule))
+	router.GET("/clash/:link/:rulefile", route.ExportClashConfig(store, confDir, clashRulePath+"/"+clashRule))
 
 	go func() {
+		// spawn an HTTP server in this goroutine
 		if err := router.Start(fmt.Sprintf(":%d", port)); err != nil && err != http.ErrServerClosed {
 			router.Logger.Fatal("Shutting down the server")
 		}

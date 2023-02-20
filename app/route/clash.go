@@ -14,12 +14,12 @@ import (
 
 // config :[]byte => yaml
 
-func ExportClashConfig(cache *cache.Cache) echo.HandlerFunc {
+func ExportClashConfig(cache *cache.Cache, acldir string, defaultrulefile string) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 		var rfpath string
 
 		subsLinkB64 := ctx.Param("link")
-		rulefilename := ctx.Param("rulefile")
+		rulefile := ctx.Param("rulefile")
 
 		subsLink, b64err := base64.RawURLEncoding.DecodeString(subsLinkB64)
 
@@ -27,10 +27,10 @@ func ExportClashConfig(cache *cache.Cache) echo.HandlerFunc {
 			return b64err
 		}
 
-		if rulefilename != "" {
-			rfpath = fmt.Sprintf("%s/%s", config.DefaultClashConfigPath, rulefilename)
+		if rulefile == "" {
+			rfpath = defaultrulefile
 		} else {
-			rfpath = fmt.Sprintf("%s/%s", config.DefaultClashConfigPath, config.DefaultClashRule)
+			rfpath = fmt.Sprintf("%s/%s", config.DefaultClashRulePath, rulefile)
 		}
 
 		encSubscription, onlineErr := utils.GetOnlineContent(string(subsLink))
@@ -41,7 +41,7 @@ func ExportClashConfig(cache *cache.Cache) echo.HandlerFunc {
 
 		clash := facade.NewCachedGenerator("clash", cache)
 
-		collectErr := clash.Collect(encSubscription, config.GetDefaultConfigDirectory(), rfpath)
+		collectErr := clash.Collect(encSubscription, acldir, rfpath)
 
 		if collectErr != nil {
 			return collectErr

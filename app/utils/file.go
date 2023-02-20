@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"bufio"
 	"io"
 	"log"
 	"os"
@@ -9,37 +8,50 @@ import (
 
 // file manipulation
 
-func ReadAll(filename string) (string, error) {
-	file, oerr := os.Open(filename)
-	defer file.Close()
+func ReadAll(name string) (string, error) {
+
+	if name == "stdin" {
+		return read(os.Stdin)
+	}
+
+	file, oerr := os.Open(name)
 
 	if oerr != nil {
 		return "", oerr
 	}
 
-	reader := bufio.NewReader(file)
-
-	content, ioerr := io.ReadAll(reader)
-
-	if ioerr != nil {
-		return "", ioerr
-	}
-
-	return string(content), nil
+	return read(file)
 }
 
-func WriteContent(filename string, data []byte) {
+func read(rc io.ReadCloser) (content string, unknown error) {
+	defer rc.Close()
+
+	var buf []byte
+	buf, unknown = io.ReadAll(rc)
+	content = string(buf)
+
+	return
+}
+
+func WriteContent(filename string, data []byte) (n int, unknown error) {
+
+	if filename == "stdout" {
+		return write(os.Stdout, data)
+	}
+
 	file, oerr := os.Create(filename)
-	defer file.Close()
 
 	if oerr != nil {
 		log.Fatal(oerr)
 	}
 
-	_, werr := file.Write(data)
+	return write(file, data)
+}
 
-	if werr != nil {
-		log.Fatal(werr)
-	}
+func write(wc io.WriteCloser, data []byte) (n int, unknown error) {
+	defer wc.Close()
 
+	n, unknown = wc.Write(data)
+
+	return
 }

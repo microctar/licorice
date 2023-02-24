@@ -3,7 +3,8 @@ package constant
 // Semantic Versioning: major.minor.patch
 // HomePage: https://semver.org
 
-const (
+var (
 	Version   = "unknown version"
 	BuildTime = "unknown time"
+	GitCommit = "unsupported"
 )

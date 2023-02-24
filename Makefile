@@ -1,6 +1,7 @@
 NAME=licorice
 BINDIR=bin
 VERSION=$(shell git describe --tags || echo "unknown version")
+GITCOMMIT=$(shell git rev-parse --short HEAD || echo "unsupported")
 BUILDTIME=$(shell date -u)
 
 #  -trimpath => remove all file system paths from executable
@@ -8,6 +9,7 @@ BUILDTIME=$(shell date -u)
 
 GOBUILD=CGO_ENABLED=0 go build -trimpath -ldflags '-X "github.com/microctar/licorice/app/constant.Version=$(VERSION)" \
 				-X "github.com/microctar/licorice/app/constant.BuildTime=$(BUILDTIME)" \
+				-X "github.com/microctar/licorice/app/constant.GitCommit=$(GITCOMMIT)" \
 				-w -s -buildid='
 
 PLATFORM_LIST = \

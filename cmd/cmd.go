@@ -15,6 +15,7 @@ const (
 	versionTmpl = `licorice:
   Version:      {{.Version}}
   Go version:   {{.GoVer}}
+  Git commit:   {{.GitCommit}}
   Built:        {{.BuildTime}}
   OS/Arch:      {{.OSAndArch}}
 `
@@ -34,6 +35,7 @@ var (
 var (
 	rootCmd = &cobra.Command{
 		Use:          "licorice [OPTIONS] COMMAND",
+		Version:      constant.Version,
 		Short:        "a utility to create configuration for tunnel",
 		Long:         "licorice - a utility to create configuration for rule-based tunnel in go",
 		SilenceUsage: true,
@@ -46,6 +48,7 @@ var (
 			verData := map[string]any{
 				"Version":   constant.Version,
 				"GoVer":     runtime.Version(),
+				"GitCommit": constant.GitCommit,
 				"BuildTime": constant.BuildTime,
 				"OSAndArch": fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH),
 			}
@@ -91,6 +94,7 @@ func init() {
 
 	rootCmd.AddCommand(verCmd)
 	rootCmd.AddCommand(srvCmd, conCmd)
+	rootCmd.SetVersionTemplate(fmt.Sprintf("licorice version %s, build %s", constant.Version, constant.GitCommit))
 
 	srvCmd.Flags().Uint16VarP(&port, "port", "p", 6060, "Set server port")
 	srvCmd.Flags().StringVarP(&confDir, "confdir", "d", config.GetDefaultConfigDirectory(), "Specify the acl files directory")

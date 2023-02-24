@@ -16,7 +16,8 @@ const (
   Version:      {{.Version}}
   Go version:   {{.GoVer}}
   Built:        {{.BuildTime}}
-  OS/Arch:      {{.OSAndArch}}`
+  OS/Arch:      {{.OSAndArch}}
+`
 )
 
 var (

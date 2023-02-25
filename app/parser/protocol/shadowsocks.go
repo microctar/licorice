@@ -45,7 +45,7 @@ func (proxy *ProxyShadowsocks) Parse(uriScheme string) error {
 	strPort := ssURL.Port()
 
 	{
-		port, convErr := strconv.Atoi(strPort)
+		port, convErr := strconv.ParseUint(strPort, 10, 16)
 		if convErr != nil {
 			return errors.New("parser => cannot parser port of shadowsocks config")
 		}

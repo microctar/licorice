@@ -44,10 +44,10 @@ func (d *clashDiverter) ReadFile(basedir, path string) error {
 	rOnline := regexp.MustCompile("(?i:online)")
 	rFinal := regexp.MustCompile("(?i:final)")
 
-	ruleset := rRuleset.FindAllStringSubmatch(string(content), 64)
-	cpg := rCpg.FindAllStringSubmatch(string(content), 64)
-	erp := rErg.FindStringSubmatch(string(content))
-	oor := rOor.FindStringSubmatch(string(content))
+	ruleset := rRuleset.FindAllStringSubmatch(content, 64)
+	cpg := rCpg.FindAllStringSubmatch(content, 64)
+	erp := rErg.FindStringSubmatch(content)
+	oor := rOor.FindStringSubmatch(content)
 
 	if !rOnline.MatchString(absPath) {
 		d.Offline = true

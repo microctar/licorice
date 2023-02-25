@@ -8,19 +8,19 @@ import (
 )
 
 func GetOnlineContent(url string) (string, error) {
-	reponse, err := http.Get(url)
+	response, err := http.Get(url)
 
 	if err != nil {
 		return "", err
 	}
 
-	defer reponse.Body.Close()
+	defer response.Body.Close()
 
-	if reponse.StatusCode != http.StatusOK {
-		return "", errors.New(fmt.Sprintf("http status: %d", reponse.StatusCode))
+	if response.StatusCode != http.StatusOK {
+		return "", errors.New(fmt.Sprintf("http status: %d", response.StatusCode))
 	}
 
-	body, repErr := io.ReadAll(reponse.Body)
+	body, repErr := io.ReadAll(response.Body)
 
 	if repErr != nil {
 		return "", repErr

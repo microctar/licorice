@@ -29,10 +29,16 @@ PLATFORM_LIST = \
 
 all: linux-amd64 freebsd-amd64
 
-current: $(shell uname -sp  | tr [A-Z'\040'] [a-z'\055'])
+current: $(shell uname -sm  | tr [A-Z'\040'] [a-z'\055'])
+
+linux-i386: linux-386
+
+linux-i686: linux-386
 
 linux-386:
 	GOARCH=386 GOOS=linux $(GOBUILD) -o $(BINDIR)/$(NAME)-$@
+
+linux-x86_64: linux-amd64
 
 linux-amd64:
 	GOARCH=amd64 GOOS=linux $(GOBUILD) -o $(BINDIR)/$(NAME)-$@
@@ -49,14 +55,20 @@ linux-armv6:
 linux-armv7:
 	GOARCH=arm GOOS=linux GOARM=6 $(GOBUILD) -o $(BINDIR)/$(NAME)-$@
 
+linux-aarch64: linux-armv8
+
 linux-armv8:
 	GOARCH=arm64 GOOS=linux $(GOBUILD) -o $(BINDIR)/$(NAME)-$@
+
+freebsd-i386: freebsd-386
 
 freebsd-386:
 	GOARCH=386 GOOS=freebsd $(GOBUILD) -o $(BINDIR)/$(NAME)-$@
 
 freebsd-amd64:
 	GOARCH=amd64 GOOS=freebsd $(GOBUILD) -o $(BINDIR)/$(NAME)-$@
+
+freebsd-aarch64: freebsd-arm64
 
 freebsd-arm64:
 	GOARCH=arm64 GOOS=freebsd $(GOBUILD) -o $(BINDIR)/$(NAME)-$@

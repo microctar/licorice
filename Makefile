@@ -1,3 +1,5 @@
+.DEFAULT_GOAL=current
+
 NAME=licorice
 BINDIR=bin
 VERSION=$(shell git describe --tags || echo "unknown version")
@@ -26,6 +28,8 @@ PLATFORM_LIST = \
 		freebsd-arm64
 
 all: linux-amd64 freebsd-amd64
+
+current: $(shell uname -sp  | tr [A-Z'\040'] [a-z'\055'])
 
 linux-386:
 	GOARCH=386 GOOS=linux $(GOBUILD) -o $(BINDIR)/$(NAME)-$@

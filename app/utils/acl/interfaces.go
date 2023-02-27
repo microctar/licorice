@@ -3,18 +3,24 @@ package acl
 import (
 	"fmt"
 
+	"github.com/microctar/licorice/app/utils"
 	"github.com/patrickmn/go-cache"
 )
 
-var _ ACLReader = (*CachedACLR)(nil)
+var _ ACLReader = (*cachedACLR)(nil)
 
 type ACLReader interface {
 	// e.g. basedir => /usr/local/etc, ruleFilename => rules/ACL4SSR/Clash/config/example.ini
 	ReadFile(basedir string, ruleFilename string) error
+
+	// Expose exposes underlying type of ACLReader
 	Expose() any
+
+	// SetQueryer setup regexp queryer with/without cache layer
+	SetQueryer(queryer utils.REQueryer)
 }
 
-type CachedACLR struct {
+type cachedACLR struct {
 	aclr  ACLReader
 	cache *cache.Cache
 }
@@ -29,17 +35,23 @@ func NewACLR(client string) ACLReader {
 		}
 	}
 
+	aclr.SetQueryer(utils.NewRegexpQueryer())
+
 	return aclr
 }
 
 func NewCachedACLR(client string, cache *cache.Cache) ACLReader {
-	return &CachedACLR{
+	aclr := &cachedACLR{
 		aclr:  NewACLR(client),
 		cache: cache,
 	}
+
+	aclr.SetQueryer(utils.NewCachedRegexpQueryer(cache))
+
+	return aclr
 }
 
-func (c *CachedACLR) ReadFile(basedir string, ruleFilename string) error {
+func (c *cachedACLR) ReadFile(basedir string, ruleFilename string) error {
 	rulefile := fmt.Sprintf("%s/%s", basedir, ruleFilename)
 
 	if data, found := c.cache.Get(rulefile); found {
@@ -56,6 +68,10 @@ func (c *CachedACLR) ReadFile(basedir string, ruleFilename string) error {
 	return nil
 }
 
-func (c *CachedACLR) Expose() any {
+func (c *cachedACLR) SetQueryer(queryer utils.REQueryer) {
+	c.aclr.SetQueryer(queryer)
+}
+
+func (c *cachedACLR) Expose() any {
 	return c.aclr.Expose()
 }

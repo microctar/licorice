@@ -21,14 +21,14 @@ type ProxyShadowsocks struct {
 	Server     string                 `yaml:"server"`
 	Port       uint16                 `yaml:"port"`
 	Type       ProxyType              `yaml:"type"`
+	UDP        bool                   `yaml:"udp"`
 	Method     string                 `yaml:"cipher"`
 	Password   string                 `yaml:"password"`
 	Plugin     string                 `yaml:"plugin,omitempty"`
 	PluginOpts map[string]interface{} `yaml:"plugin-opts,omitempty"`
-	UDP        bool                   `yaml:"udp"`
 }
 
-func (proxy *ProxyShadowsocks) Parse(uriScheme string) error {
+func (proxy *ProxyShadowsocks) Parse(uriScheme string, reQueryer utils.REQueryer) error {
 	ssURL, urlerr := url.Parse(uriScheme)
 
 	if urlerr != nil {
@@ -59,7 +59,7 @@ func (proxy *ProxyShadowsocks) Parse(uriScheme string) error {
 	{
 		// extract userinfo
 
-		userinfo := utils.Get("ss:\\/\\/(.*?)@", uriScheme)
+		userinfo := utils.ReGetOne(reQueryer.Query("ss:\\/\\/(.*?)@"), uriScheme)
 
 		mp, b64err := base64.RawURLEncoding.DecodeString(userinfo)
 

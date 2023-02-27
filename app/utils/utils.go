@@ -2,37 +2,64 @@ package utils
 
 import (
 	"regexp"
+
+	"github.com/patrickmn/go-cache"
 )
+
+type REQueryer interface {
+	Query(pattern string) *regexp.Regexp
+}
+
+type (
+	cachedRE struct {
+		cacheStore *cache.Cache
+	}
+
+	regExp struct{}
+)
+
+func NewCachedRegexpQueryer(cacheStore *cache.Cache) REQueryer {
+	if cacheStore == (*cache.Cache)(nil) {
+		return &regExp{}
+	}
+
+	return &cachedRE{
+		cacheStore: cacheStore,
+	}
+}
+
+func NewRegexpQueryer() REQueryer {
+	return NewCachedRegexpQueryer((*cache.Cache)(nil))
+}
+
+func (cre *cachedRE) set(pattern string) *regexp.Regexp {
+	compiledRE := regexp.MustCompile(pattern)
+	cre.cacheStore.Set(pattern, compiledRE, cache.NoExpiration)
+
+	return compiledRE
+}
+
+func (cre *cachedRE) Query(pattern string) *regexp.Regexp {
+	if compiledRE, found := cre.cacheStore.Get(pattern); found {
+		return compiledRE.(*regexp.Regexp)
+	}
+
+	return cre.set(pattern)
+}
+
+func (re *regExp) Query(pattern string) *regexp.Regexp {
+	return regexp.MustCompile(pattern)
+}
 
 // Regexp utilities
 
-var GetProt = Get
+func ReGetOne(re *regexp.Regexp, text string) string {
 
-func Get(pattern, text string) string {
-	r := regexp.MustCompile(pattern)
-
-	if result := r.FindStringSubmatch(text); result != nil {
+	if result := re.FindStringSubmatch(text); result != nil {
 
 		// e.g. result => ["matched string", "substring"]
 
 		return result[1]
-	}
-
-	return ""
-}
-
-func GetByParam(pattern, text string) string {
-	r := regexp.MustCompile(pattern)
-
-	if result := r.FindStringSubmatch(text); result != nil {
-
-		// e.g. result => ["matched string", "substring", "", ...]
-
-		for _, param := range result[1:] {
-			if param != "" {
-				return param
-			}
-		}
 	}
 
 	return ""

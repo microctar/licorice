@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/microctar/licorice/app/parser"
+	"github.com/microctar/licorice/app/utils"
 	"github.com/microctar/licorice/app/utils/acl"
 	"github.com/patrickmn/go-cache"
 	"gopkg.in/yaml.v3"
@@ -16,6 +17,7 @@ var _ Generator = (*ClashConfig)(nil)
 type ClashConfig struct {
 	RawConfig RawConfig
 	aclr      acl.ACLReader
+	reQueryer utils.REQueryer
 }
 
 func (cc *ClashConfig) getDefaultConfig() {
@@ -35,7 +37,7 @@ func (cc *ClashConfig) Collect(encSubscription string, basedir string, ruleFilen
 
 	cc.getDefaultConfig()
 
-	data := parser.NewParser()
+	data := parser.NewParser(cc.reQueryer)
 	if err := data.Parse(encSubscription); err != nil {
 		return err
 	}
@@ -89,6 +91,7 @@ func (cc *ClashConfig) Export() ([]byte, error) {
 }
 
 func (cc *ClashConfig) Setup(client string, cachestore *cache.Cache) {
+	cc.reQueryer = utils.NewCachedRegexpQueryer(cachestore)
 
 	if cachestore == (*cache.Cache)(nil) {
 		cc.aclr = acl.NewACLR(client)

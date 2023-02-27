@@ -1,10 +1,12 @@
 package parser
 
+import "github.com/microctar/licorice/app/utils"
+
 type Proxy interface {
-	Parse(string) error
+	Parse(string, utils.REQueryer) error
 	GetName() string
 }
 
-func NewParser() *Parser {
-	return &Parser{}
+func NewParser(queryer utils.REQueryer) *Parser {
+	return &Parser{reQueryer: queryer}
 }

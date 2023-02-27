@@ -2,7 +2,6 @@ package acl
 
 import (
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -15,10 +14,15 @@ var _ ACLReader = (*clashDiverter)(nil)
 
 type clashDiverter struct {
 	Offline                bool
-	Ruleset                map[string][]string
-	CustomProxyGroup       []map[string]any
 	OverwriteOriginalRules bool
 	EnableRuleGenerator    bool
+	Ruleset                map[string][]string
+	CustomProxyGroup       []map[string]any
+	reQueryer              utils.REQueryer
+}
+
+func (d *clashDiverter) SetQueryer(queryer utils.REQueryer) {
+	d.reQueryer = queryer
 }
 
 func (d *clashDiverter) ReadFile(basedir, path string) error {
@@ -33,16 +37,16 @@ func (d *clashDiverter) ReadFile(basedir, path string) error {
 	}
 
 	// regexp
-	rRuleset := regexp.MustCompile("ruleset=(.*)")
-	rCpg := regexp.MustCompile("custom_proxy_group=(.*)")
-	rErg := regexp.MustCompile("enable_rule_generator=(.*)")
-	rOor := regexp.MustCompile("overwrite_original_rules=(.*)")
-	rCommonRule := regexp.MustCompile("(?m:^(DOMAIN|DOMAIN-(KEYWORD|SUFFIX)|PROCESS-NAME)(.*?)$)")
-	rUnsupportedRule := regexp.MustCompile("(?m:^(USER-AGENT|URL-REGEX)(.*?)$)")
-	rNoresolve := regexp.MustCompile("(?im:^(.*?),no-resolve$)")
-	rAllrule := regexp.MustCompile("(?im:^[^\\#\\n].*$)")
-	rOnline := regexp.MustCompile("(?i:online)")
-	rFinal := regexp.MustCompile("(?i:final)")
+	rRuleset := d.reQueryer.Query("ruleset=(.*)")
+	rCpg := d.reQueryer.Query("custom_proxy_group=(.*)")
+	rErg := d.reQueryer.Query("enable_rule_generator=(.*)")
+	rOor := d.reQueryer.Query("overwrite_original_rules=(.*)")
+	rCommonRule := d.reQueryer.Query("(?m:^(DOMAIN|DOMAIN-(KEYWORD|SUFFIX)|PROCESS-NAME)(.*?)$)")
+	rUnsupportedRule := d.reQueryer.Query("(?m:^(USER-AGENT|URL-REGEX)(.*?)$)")
+	rNoresolve := d.reQueryer.Query("(?im:^(.*?),no-resolve$)")
+	rAllrule := d.reQueryer.Query("(?im:^[^\\#\\n].*$)")
+	rOnline := d.reQueryer.Query("(?i:online)")
+	rFinal := d.reQueryer.Query("(?i:final)")
 
 	ruleset := rRuleset.FindAllStringSubmatch(content, 64)
 	cpg := rCpg.FindAllStringSubmatch(content, 64)

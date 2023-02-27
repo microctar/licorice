@@ -2,18 +2,16 @@ package parser
 
 import (
 	"encoding/base64"
-	"log"
 	"strings"
 
 	"github.com/microctar/licorice/app/parser/protocol"
 	"github.com/microctar/licorice/app/utils"
 )
 
-var _ Proxy = (*Parser)(nil)
-
 type Parser struct {
-	Proxies []Proxy
-	Groups  []string
+	Proxies   []Proxy
+	Groups    []string
+	reQueryer utils.REQueryer
 }
 
 func (target *Parser) Parse(encSubscription string) error {
@@ -29,7 +27,7 @@ func (target *Parser) Parse(encSubscription string) error {
 	subscription := strings.Split(string(metadata), "\n")
 
 	for _, fragment := range subscription {
-		proto := utils.Get("(.*?):\\/\\/", fragment)
+		proto := utils.ReGetOne(target.reQueryer.Query("(.*?):\\/\\/"), fragment)
 
 		var proxy Proxy
 
@@ -43,8 +41,8 @@ func (target *Parser) Parse(encSubscription string) error {
 			continue
 		}
 
-		if err := proxy.Parse(fragment); err != nil {
-			log.Fatal(err)
+		if err := proxy.Parse(fragment, target.reQueryer); err != nil {
+			return err
 		}
 
 		target.Proxies = append(target.Proxies, proxy)
@@ -52,8 +50,4 @@ func (target *Parser) Parse(encSubscription string) error {
 	}
 
 	return nil
-}
-
-func (target *Parser) GetName() string {
-	return ""
 }

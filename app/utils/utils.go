@@ -68,8 +68,5 @@ func ReGetOne(re *regexp.Regexp, text string) string {
 // convert string to boolean
 
 func Str2Bool(valBool string) bool {
-	if valBool == "true" {
-		return true
-	}
-	return false
+	return valBool == "true"
 }

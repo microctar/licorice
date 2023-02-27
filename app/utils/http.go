@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -17,7 +16,7 @@ func GetOnlineContent(url string) (string, error) {
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return "", errors.New(fmt.Sprintf("http status: %d", response.StatusCode))
+		return "", fmt.Errorf("http status: %d", response.StatusCode)
 	}
 
 	body, repErr := io.ReadAll(response.Body)

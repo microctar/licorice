@@ -39,7 +39,7 @@ func runServer() {
 	// graceful shutdown
 	safetybolt := make(chan os.Signal, 1)
 
-	signal.Notify(safetybolt, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
+	signal.Notify(safetybolt, syscall.SIGINT, syscall.SIGTERM)
 
 	<-safetybolt
 

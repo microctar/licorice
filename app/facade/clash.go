@@ -91,12 +91,12 @@ func (cc *ClashConfig) Export() ([]byte, error) {
 }
 
 func (cc *ClashConfig) Setup(client string, cachestore *cache.Cache) {
-	cc.reQueryer = utils.NewCachedRegexpQueryer(cachestore)
-
 	if cachestore == (*cache.Cache)(nil) {
 		cc.aclr = acl.NewACLR(client)
+		cc.reQueryer = utils.NewRegexpQueryer()
 		return
 	}
 
 	cc.aclr = acl.NewCachedACLR(client, cachestore)
+	cc.reQueryer = utils.NewCachedRegexpQueryer(cachestore)
 }

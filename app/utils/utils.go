@@ -19,17 +19,13 @@ type (
 )
 
 func NewCachedRegexpQueryer(cacheStore *cache.Cache) REQueryer {
-	if cacheStore == (*cache.Cache)(nil) {
-		return &regExp{}
-	}
-
 	return &cachedRE{
 		cacheStore: cacheStore,
 	}
 }
 
 func NewRegexpQueryer() REQueryer {
-	return NewCachedRegexpQueryer((*cache.Cache)(nil))
+	return &regExp{}
 }
 
 func (cre *cachedRE) set(pattern string) *regexp.Regexp {

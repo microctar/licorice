@@ -1,0 +1,94 @@
+name: release
+
+on:
+  push:
+    workflow_dispatch:
+      inputs:
+        tag_name:
+          description: 'Tag name for release'
+          required: true
+    tags:
+      - v[0-9]+.[0-9]+.[0-9]+
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    container:
+      image: golang:latest
+      options: --privileged
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Prepare container
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          apt install make -y
+
+      - uses: actions/checkout@v3
+
+      - name: Build release
+        id: build
+        run: |
+          make all
+          cd ./bin
+          tar -czpf licorice-linux-amd64.tar.gz licorice-linux-amd64
+          tar -czpf licorice-freebsd-amd64.tar.gz licorice-freebsd-amd64
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: licorice-amd64
+          path: |
+            bin/licorice-linux-amd64.tar.gz
+            bin/licorice-freebsd-amd64.tar.gz
+          retention-days: 1
+
+
+  publish:
+    needs: [linux]
+    runs-on: ubuntu-latest
+    env:
+      GH_REPO: ${{ github.repository }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/download-artifact@v3
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y gettext-base
+
+      - if: github.event_name == 'workflow_dispatch'
+        run: echo "TAG_NAME=${{ github.event.inputs.tag_name }}" >> $GITHUB_ENV
+
+      - if: github.event_name == 'push'
+        run: |
+          TAG_NAME=${{ github.ref }}
+          echo "TAG_NAME=${TAG_NAME#refs/tags/}" >> $GITHUB_ENV
+
+      - name: Configure environment
+        run: |
+          (echo 'SUBJECT=licorice release build';
+           echo 'PRERELEASE=') >> $GITHUB_ENV
+          gh release delete stable --yes || true
+          git push origin :stable || true
+
+      - name: Generate Linux SHA256 checksums
+        run: |
+          cd ./licorice-amd64
+          sha256sum licorice-linux-amd64.tar.gz > licorice-linux-amd64.tar.gz.sha256sum
+          echo "SHA_LINUX_64_TAR=$(cat licorice-linux-amd64.tar.gz.sha256sum)" >> $GITHUB_ENV
+
+      - name: Generate FreeBSD SHA256 checksums
+        run: |
+          cd ./licorice-amd64
+          sha256sum licorice-freebsd-amd64.tar.gz > licorice-freebsd-amd64.tar.gz.sha256sum
+          echo "SHA_FREEBSD_64_TAR=$(cat licorice-freebsd-amd64.tar.gz.sha256sum)" >> $GITHUB_ENV
+
+
+      - name: Publish release
+        run: |
+          gh release create $TAG_NAME $PRERELEASE --title "$SUBJECT" --target $GITHUB_SHA licorice-amd64/*
+          gh release create stable $PRERELEASE --title "$SUBJECT" --target $GITHUB_SHA licorice-amd64/*

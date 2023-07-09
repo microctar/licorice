@@ -81,6 +81,19 @@ var (
 			runConsole()
 		},
 	}
+
+	utilCmd = &cobra.Command{
+		Use:   "util",
+		Short: "Miscellaneous tools",
+	}
+
+	encCmd = &cobra.Command{
+		Use:   "encode",
+		Short: "Unpadded alternate base64 encoding",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Print(RawURLEncoding(args[0]))
+		},
+	}
 )
 
 // Execute executes the root cmd.
@@ -94,6 +107,7 @@ func init() {
 
 	rootCmd.AddCommand(verCmd)
 	rootCmd.AddCommand(srvCmd, conCmd)
+	rootCmd.AddCommand(utilCmd)
 	rootCmd.SetVersionTemplate(fmt.Sprintf("licorice version %s, build %s", constant.Version, constant.GitCommit))
 
 	srvCmd.Flags().Uint16VarP(&port, "port", "p", 6060, "Set server port")
@@ -103,4 +117,6 @@ func init() {
 	conCmd.Flags().StringVarP(&confDir, "confdir", "d", config.GetDefaultConfigDirectory(), "Specify the acl files directory")
 	conCmd.Flags().StringVarP(&inputFile, "input", "i", "stdin", "Read subscription from the specified file instead of stdin")
 	conCmd.Flags().StringVarP(&outputFile, "output", "o", "stdout", "Write output to the specified file instead of stdout")
+
+	utilCmd.AddCommand(encCmd)
 }

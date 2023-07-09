@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/microctar/licorice/app/config"
@@ -17,6 +18,7 @@ import (
 func ExportClashConfig(cache *cache.Cache, acldir string, defaultrulefile string) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 		var rfpath string
+		var b64Links strings.Builder
 
 		subsLinkB64 := ctx.Param("link")
 		rulefile := ctx.Param("rulefile")
@@ -27,13 +29,15 @@ func ExportClashConfig(cache *cache.Cache, acldir string, defaultrulefile string
 			return b64err
 		}
 
+		b64Links.Write(subsLink)
+
 		if rulefile == "" {
 			rfpath = defaultrulefile
 		} else {
 			rfpath = fmt.Sprintf("%s/%s", config.DefaultClashRulePath, rulefile)
 		}
 
-		encSubscription, onlineErr := utils.GetOnlineContent(string(subsLink))
+		encSubscription, onlineErr := utils.GetOnlineContent(b64Links.String())
 
 		if onlineErr != nil {
 			return onlineErr
@@ -41,9 +45,7 @@ func ExportClashConfig(cache *cache.Cache, acldir string, defaultrulefile string
 
 		clash := facade.NewCachedGenerator("clash", cache)
 
-		collectErr := clash.Collect(encSubscription, acldir, rfpath)
-
-		if collectErr != nil {
+		if collectErr := clash.Collect(encSubscription, acldir, rfpath); collectErr != nil {
 			return collectErr
 		}
 

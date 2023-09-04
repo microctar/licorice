@@ -17,24 +17,21 @@ import (
 
 func ExportClashConfig(cache *cache.Cache, acldir string, defaultrulefile string) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
-		var rfpath string
 		var b64Links strings.Builder
 
 		subsLinkB64 := ctx.Param("link")
 		rulefile := ctx.Param("rulefile")
 
-		subsLink, b64err := base64.RawURLEncoding.DecodeString(subsLinkB64)
-
-		if b64err != nil {
+		if subsLink, b64err := base64.RawURLEncoding.DecodeString(subsLinkB64); b64err != nil {
 			return b64err
+		} else {
+			b64Links.Write(subsLink)
 		}
 
-		b64Links.Write(subsLink)
+		rfpath := fmt.Sprintf("%s/%s", config.DefaultClashRulePath, rulefile)
 
 		if rulefile == "" {
 			rfpath = defaultrulefile
-		} else {
-			rfpath = fmt.Sprintf("%s/%s", config.DefaultClashRulePath, rulefile)
 		}
 
 		encSubscription, onlineErr := utils.GetOnlineContent(b64Links.String())

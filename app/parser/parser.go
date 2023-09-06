@@ -27,7 +27,7 @@ func (target *Parser) Parse(encSubscription string) error {
 	subscription := strings.Split(string(metadata), "\n")
 
 	for _, fragment := range subscription {
-		proto := utils.ReGetOne(target.reQueryer.Query("(.*?):\\/\\/"), fragment)
+		proto := utils.ReGetFirst(target.reQueryer.Query("(.*?):\\/\\/"), fragment)
 
 		var proxy Proxy
 

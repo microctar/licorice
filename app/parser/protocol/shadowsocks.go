@@ -59,7 +59,7 @@ func (proxy *ProxyShadowsocks) Parse(uriScheme string, reQueryer utils.REQueryer
 	{
 		// extract userinfo
 
-		userinfo := utils.ReGetOne(reQueryer.Query("ss:\\/\\/(.*?)@"), uriScheme)
+		userinfo := utils.ReGetFirst(reQueryer.Query("ss:\\/\\/(.*?)@"), uriScheme)
 
 		mp, b64err := base64.RawURLEncoding.DecodeString(userinfo)
 

@@ -9,12 +9,17 @@ const (
 
 	// a fast tunnel proxy [Shadowsocks](https://shadowsocks.org)
 	Shadowsocks
+
+	// An unidentifiable mechanism
+	Trojan
 )
 
 func (target ProxyType) String() string {
 	switch target {
 	case Shadowsocks:
 		return "ss"
+	case Trojan:
+		return "trojan"
 	default:
 		return "unknown"
 	}

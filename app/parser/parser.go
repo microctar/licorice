@@ -36,6 +36,8 @@ func (target *Parser) Parse(encSubscription string) error {
 		// if the protocol is shadowsocks
 		case "ss":
 			proxy = &protocol.ProxyShadowsocks{}
+		case "trojan":
+			proxy = &protocol.ProxyTrojan{}
 		default:
 			// skip
 			continue
